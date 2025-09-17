@@ -470,14 +470,14 @@ class TaskIndependentComponentType : public TaskIndependentComponentBase {
 protected:
     virtual std::shared_ptr<ComponentType> create_task_specific(
         const AbstractTask &task
-		,std::unique_ptr<ComponentMap> &component_map
+	 	, const std::unique_ptr<ComponentMap> &component_map
 	) const = 0;
 public :
     virtual std::shared_ptr<ComponentType> get_task_specific(
         const AbstractTask &task) const = 0;
     virtual std::shared_ptr<ComponentType> get_task_specific(
         const AbstractTask &task,
-        std::unique_ptr<ComponentMap> &component_map) const = 0;
+        const std::unique_ptr<ComponentMap> &component_map) const = 0;
 };
 
 template<typename Component, typename ComponentType, typename TIComponentArgs>
@@ -488,7 +488,7 @@ ComponentMatchesTIComponentArgs<Component, TIComponentArgs>::value
 class TaskIndependentComponent : public TaskIndependentComponentType<ComponentType>{
     TIComponentArgs args;
 protected:
-    virtual shared_ptr<ComponentType> create_task_specific(const AbstractTask &task, std::unique_ptr<ComponentMap> &component_map) const override {
+    virtual shared_ptr<ComponentType> create_task_specific(const AbstractTask &task, const std::unique_ptr<ComponentMap> &component_map) const override {
         auto ts_args = make_task_specific_tuple(task, component_map, args);
         return make_shared_from_tuple<Component>(task, ts_args);
     }
@@ -512,7 +512,7 @@ public:
 
     std::shared_ptr<ComponentType> get_task_specific(
         const AbstractTask &task
-		,std::unique_ptr<ComponentMap> &component_map
+		,const std::unique_ptr<ComponentMap> &component_map
 	) 
 	const override 
 	{
@@ -544,34 +544,33 @@ public:
 
 
 template<typename T>
-static auto make_task_specific(const AbstractTask &task, const T &t) {
+static auto make_task_specific(const AbstractTask &task, const unique_ptr<ComponentMap> &map, const T &t) {
     return t;
 }
 
 template<typename T>
-static auto make_task_specific(const AbstractTask &task, const std::vector<T> &vec) {
+static auto make_task_specific(const AbstractTask &task, const unique_ptr<ComponentMap> &map, const std::vector<T> &vec) {
     std::vector<decltype(make_task_specific(
-        task, vec[0]))>
+        task, map, vec[0]))>
         result;
     result.reserve(vec.size());
 
     for (const auto &elem : vec) {
         result.push_back(
-            make_task_specific(task, elem));
+            make_task_specific(task, map, elem));
     }
     return result;
 }
 
 template<typename T1, typename T2, typename T3>
-static auto make_task_specific(const AbstractTask &task, const shared_ptr<TaskIndependentComponent<T1, T2, T3>> &t,
-				     const unique_ptr<ComponentMap> &map = nullptr) {
-    return t->get_task_specific(task);
+static auto make_task_specific(const AbstractTask &task, const unique_ptr<ComponentMap> &map, const shared_ptr<TaskIndependentComponent<T1, T2, T3>> &t) {
+    return t->get_task_specific(task, map);
 }
 
 template<typename T>
-static auto make_task_specific(const AbstractTask &task, const shared_ptr<TaskIndependentComponentType<T>> &t,
-				     const unique_ptr<ComponentMap> &map = nullptr) {
-    return t->get_task_specific(task);
+static auto make_task_specific(const AbstractTask &task,
+				     const unique_ptr<ComponentMap> &map, const shared_ptr<TaskIndependentComponentType<T>> &t) {
+    return t->get_task_specific(task, map);
 }
 
 template<typename... Args>
@@ -580,7 +579,7 @@ static auto make_task_specific_tuple(const AbstractTask &task,
 				     const std::tuple<Args...>& args
 				     ) {
     return std::apply([&](const Args&... elems) {
-        return std::make_tuple(make_task_specific(task, elems)...);
+        return std::make_tuple(make_task_specific(task, map, elems)...);
     }, args);
 }
 
