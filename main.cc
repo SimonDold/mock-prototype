@@ -325,75 +325,28 @@ using HashSet = std::unordered_set<T, Hash<T>>;
 
 class AbstractTask;
 
+// common base class for all components (OpneLists, Evaluators, etc)
 class Component {
 public:
     virtual ~Component() = default;
 };
 
-class Evaluator : public Component {
-public:
-    virtual void dump() = 0;
-};
 
-class ConstEvaluator: public Evaluator {
-    int c;
-public:
-    ConstEvaluator(const std::shared_ptr<AbstractTask> &, int c): c(c) {
-		std::cout << "ConstEvalConstructor" << std::endl;
-	}
-
-    void dump() override {
-		std::cout << c << std::endl;
-    }
-};
-
-class WeightedEvaluator: public Evaluator {
-    int w;
-	std::shared_ptr<Evaluator> eval;
-public:
-    WeightedEvaluator(const std::shared_ptr<AbstractTask> &, int w, const std::shared_ptr<Evaluator> &eval): w(w), eval(eval) {
-		std::cout << "WeightedEvalConstructor" << std::endl;
-}
-
-    void dump() override {
-		std::cout << w << " * ";
-        eval->dump();
-		std::cout << std::endl;
-    }
-};
-
-class SumEvaluator: public Evaluator {
-	std::vector<std::shared_ptr<Evaluator>> evals;
-public:
-    SumEvaluator(const std::shared_ptr<AbstractTask> &, const std::vector<std::shared_ptr<Evaluator>> &evals): evals(evals) {
-		std::cout << "SumEvalConstructor" << std::endl;
-	}
-
-    void dump() override {
-		for(auto eval : evals){
-			std::cout << " + ";
-                    eval->dump();
-			std::cout << std::endl;
-
-		}
-    }
-};
-
-
-class TaskIndependentComponentBase {
+// common base class for templated classes about TaskIndependentTypes and TaskIndependentComponents
+class TaskIndependentBase {
 protected:
     // // const std::string description;
     // // const utils::Verbosity verbosity;
     // // mutable utils::LogProxy log;
     // // PlanManager plan_manager; // only used for SearchAlgorithms
 public:
-    TaskIndependentComponentBase(
+    TaskIndependentBase(
         )
           {
 		std::cout << " BASE "  <<std::endl;
     }
 public:
-    virtual ~TaskIndependentComponentBase() = default;
+    virtual ~TaskIndependentBase() = default;
     std::string get_description() const {
         return "x";
     }
@@ -404,7 +357,7 @@ public:
 
 using ComponentMap = utils::HashMap<
     const std::pair<
-        const TaskIndependentComponentBase *,
+        const TaskIndependentBase *,
         const std::shared_ptr<AbstractTask> *>,
     std::shared_ptr<Component>>;
 
@@ -466,7 +419,7 @@ static std::shared_ptr<Component> make_shared_from_tuple(const std::shared_ptr<A
 
 
 template<typename ComponentType>
-class TaskIndependentComponentType : public TaskIndependentComponentBase {
+class TaskIndependentComponentType : public TaskIndependentBase {
 protected:
     virtual std::shared_ptr<ComponentType> create_task_specific(
         const std::shared_ptr<AbstractTask> &task
@@ -518,7 +471,7 @@ public:
 	{
         std::shared_ptr<Component> component;
         const std::pair<
-            const TaskIndependentComponentBase *,
+            const TaskIndependentBase *,
             const std::shared_ptr<AbstractTask> *>
             key = std::make_pair(this, &task);
         if (component_map->count(key)) {
@@ -594,6 +547,61 @@ auto make_shared_TaskIndependentComponent(TIComponentArgs &&args) {
 	std::cout << "mTIC" << std::endl;
 return _return;
 }
+
+
+
+// fd
+//
+//
+class Evaluator : public Component {
+public:
+    virtual void dump() = 0;
+};
+
+class ConstEvaluator: public Evaluator {
+    int c;
+public:
+    ConstEvaluator(const std::shared_ptr<AbstractTask> &, int c): c(c) {
+		std::cout << "ConstEvalConstructor" << std::endl;
+	}
+
+    void dump() override {
+		std::cout << c << std::endl;
+    }
+};
+
+class WeightedEvaluator: public Evaluator {
+    int w;
+	std::shared_ptr<Evaluator> eval;
+public:
+    WeightedEvaluator(const std::shared_ptr<AbstractTask> &, int w, const std::shared_ptr<Evaluator> &eval): w(w), eval(eval) {
+		std::cout << "WeightedEvalConstructor" << std::endl;
+}
+
+    void dump() override {
+		std::cout << w << " * ";
+        eval->dump();
+		std::cout << std::endl;
+    }
+};
+
+class SumEvaluator: public Evaluator {
+	std::vector<std::shared_ptr<Evaluator>> evals;
+public:
+    SumEvaluator(const std::shared_ptr<AbstractTask> &, const std::vector<std::shared_ptr<Evaluator>> &evals): evals(evals) {
+		std::cout << "SumEvalConstructor" << std::endl;
+	}
+
+    void dump() override {
+		for(auto eval : evals){
+			std::cout << " + ";
+                    eval->dump();
+			std::cout << std::endl;
+
+		}
+    }
+};
+
 
 int main() {
     auto ti_c_eval = make_shared_TaskIndependentComponent<ConstEvaluator, Evaluator>(std::tuple(2));
