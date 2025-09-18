@@ -322,10 +322,8 @@ using HashSet = std::unordered_set<T, Hash<T>>;
 
 
 
-using namespace std;
 
-class AbstractTask {
-};
+class AbstractTask;
 
 class Component {
 public:
@@ -340,42 +338,42 @@ public:
 class ConstEvaluator: public Evaluator {
     int c;
 public:
-    ConstEvaluator(const shared_ptr<AbstractTask> &, int c): c(c) {
-cout << "ConstEvalConstructor" << endl;
+    ConstEvaluator(const std::shared_ptr<AbstractTask> &, int c): c(c) {
+		std::cout << "ConstEvalConstructor" << std::endl;
 	}
 
     void dump() override {
-        cout << c << endl;
+		std::cout << c << std::endl;
     }
 };
 
 class WeightedEvaluator: public Evaluator {
     int w;
-    shared_ptr<Evaluator> eval;
+	std::shared_ptr<Evaluator> eval;
 public:
-    WeightedEvaluator(const shared_ptr<AbstractTask> &, int w, const shared_ptr<Evaluator> &eval): w(w), eval(eval) {
-cout << "WeightedEvalConstructor" << endl;
+    WeightedEvaluator(const std::shared_ptr<AbstractTask> &, int w, const std::shared_ptr<Evaluator> &eval): w(w), eval(eval) {
+		std::cout << "WeightedEvalConstructor" << std::endl;
 }
 
     void dump() override {
-        cout << w << " * ";
+		std::cout << w << " * ";
         eval->dump();
-        cout << endl;
+		std::cout << std::endl;
     }
 };
 
 class SumEvaluator: public Evaluator {
-    vector<shared_ptr<Evaluator>> evals;
+	std::vector<std::shared_ptr<Evaluator>> evals;
 public:
-    SumEvaluator(const shared_ptr<AbstractTask> &, const vector<shared_ptr<Evaluator>> &evals): evals(evals) {
-cout << "SumEvalConstructor" << endl;
+    SumEvaluator(const std::shared_ptr<AbstractTask> &, const std::vector<std::shared_ptr<Evaluator>> &evals): evals(evals) {
+		std::cout << "SumEvalConstructor" << std::endl;
 	}
 
     void dump() override {
 		for(auto eval : evals){
-                    cout << " + ";
+			std::cout << " + ";
                     eval->dump();
-                    cout << endl;
+			std::cout << std::endl;
 
 		}
     }
@@ -413,13 +411,13 @@ using ComponentMap = utils::HashMap<
 
 
 template<typename... Args>
-static auto make_task_specific_tuple(const shared_ptr<AbstractTask> &task
-		 , const unique_ptr<ComponentMap> &component_map
+static auto make_task_specific_tuple(const std::shared_ptr<AbstractTask> &task
+		 , const std::unique_ptr<ComponentMap> &component_map
 				     , const std::tuple<Args...>& args);
 
 template<typename Tuple>
 struct TaskSpecifiedArgs {
-    using type = decltype(make_task_specific_tuple(std::declval<shared_ptr<AbstractTask> >(), std::declval<unique_ptr<ComponentMap>>(), std::declval<Tuple>()));
+    using type = decltype(make_task_specific_tuple(std::declval<std::shared_ptr<AbstractTask> >(), std::declval<std::unique_ptr<ComponentMap>>(), std::declval<Tuple>()));
 };
 
 
@@ -449,12 +447,12 @@ struct IsConstructibleFromArgsTuple<Component, std::tuple<Ts...>> {
 
 template<typename Component, typename TIComponentArgs>
 struct ComponentMatchesTIComponentArgs {
-    static constexpr bool value = IsConstructibleFromArgsTuple<Component, typename PrependedTuple<shared_ptr<AbstractTask> , typename TaskSpecifiedArgs<TIComponentArgs>::type>::type>::value;
+    static constexpr bool value = IsConstructibleFromArgsTuple<Component, typename PrependedTuple<std::shared_ptr<AbstractTask> , typename TaskSpecifiedArgs<TIComponentArgs>::type>::type>::value;
 };
 
 
 template<typename Component, typename ComponentArgs>
-static shared_ptr<Component> make_shared_from_tuple(const shared_ptr<AbstractTask> &task, const ComponentArgs &args) {
+static std::shared_ptr<Component> make_shared_from_tuple(const std::shared_ptr<AbstractTask> &task, const ComponentArgs &args) {
     return std::apply(
         [&](auto&&... unpackedArgs) {
             return make_shared<Component>(task, std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
@@ -471,26 +469,26 @@ template<typename ComponentType>
 class TaskIndependentComponentType : public TaskIndependentComponentBase {
 protected:
     virtual std::shared_ptr<ComponentType> create_task_specific(
-        const shared_ptr<AbstractTask> &task
+        const std::shared_ptr<AbstractTask> &task
 	 	, const std::unique_ptr<ComponentMap> &component_map
 	) const = 0;
 public :
     virtual std::shared_ptr<ComponentType> get_task_specific(
-        const shared_ptr<AbstractTask> &task) const = 0;
+        const std::shared_ptr<AbstractTask> &task) const = 0;
     virtual std::shared_ptr<ComponentType> get_task_specific(
-        const shared_ptr<AbstractTask> &task,
+        const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<ComponentMap> &component_map) const = 0;
 };
 
 template<typename Component, typename ComponentType, typename TIComponentArgs>
 requires
-    derived_from<Component, ComponentType>
+    std::derived_from<Component, ComponentType>
 &&
 ComponentMatchesTIComponentArgs<Component, TIComponentArgs>::value
 class TaskIndependentComponent : public TaskIndependentComponentType<ComponentType>{
     TIComponentArgs args;
 protected:
-    virtual shared_ptr<ComponentType> create_task_specific(const shared_ptr<AbstractTask> &task, const std::unique_ptr<ComponentMap> &component_map) const override {
+    virtual std::shared_ptr<ComponentType> create_task_specific(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<ComponentMap> &component_map) const override {
         auto ts_args = make_task_specific_tuple(task, component_map, args);
         return make_shared_from_tuple<Component>(task, ts_args);
     }
@@ -501,10 +499,10 @@ public:
 
     
     std::shared_ptr<ComponentType> get_task_specific(
-        const shared_ptr<AbstractTask> &task
+        const std::shared_ptr<AbstractTask> &task
 	) 
 	const override {
-        cout << "Creating "
+		std::cout << "Creating "
                      << this->get_description() << " as root component..."
                      << std::endl;
         std::unique_ptr<ComponentMap> component_map =
@@ -513,7 +511,7 @@ public:
     }
 
     std::shared_ptr<ComponentType> get_task_specific(
-        const shared_ptr<AbstractTask> &task
+        const std::shared_ptr<AbstractTask> &task
 		,const std::unique_ptr<ComponentMap> &component_map
 	) 
 	const override 
@@ -524,13 +522,13 @@ public:
             const std::shared_ptr<AbstractTask> *>
             key = std::make_pair(this, &task);
         if (component_map->count(key)) {
-            cout << "Reusing task specific component '"
+			std::cout << "Reusing task specific component '"
                       //<< this->description
 			<< "'..." << std::endl;
             component = dynamic_pointer_cast<Component>(
                 component_map->at(key));
         } else {
-            cout
+			std::cout
                       << "Creating task specific component '"
                       //<< this->description 
 			<< "'..." << std::endl;
@@ -546,12 +544,12 @@ public:
 
 
 template<typename T>
-static auto make_task_specific(const shared_ptr<AbstractTask> &task, const unique_ptr<ComponentMap> &map, const T &t) {
+static auto make_task_specific(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<ComponentMap> &map, const T &t) {
     return t;
 }
 
 template<typename T>
-static auto make_task_specific(const shared_ptr<AbstractTask> &task, const unique_ptr<ComponentMap> &map, const std::vector<T> &vec) {
+static auto make_task_specific(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<ComponentMap> &map, const std::vector<T> &vec) {
     std::vector<decltype(make_task_specific(
         task, map, vec[0]))>
         result;
@@ -565,19 +563,19 @@ static auto make_task_specific(const shared_ptr<AbstractTask> &task, const uniqu
 }
 
 template<typename T1, typename T2, typename T3>
-static auto make_task_specific(const shared_ptr<AbstractTask> &task, const unique_ptr<ComponentMap> &map, const shared_ptr<TaskIndependentComponent<T1, T2, T3>> &t) {
+static auto make_task_specific(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<ComponentMap> &map, const std::shared_ptr<TaskIndependentComponent<T1, T2, T3>> &t) {
     return t->get_task_specific(task, map);
 }
 
 template<typename T>
-static auto make_task_specific(const shared_ptr<AbstractTask> &task,
-				     const unique_ptr<ComponentMap> &map, const shared_ptr<TaskIndependentComponentType<T>> &t) {
+static auto make_task_specific(const std::shared_ptr<AbstractTask> &task,
+				     const std::unique_ptr<ComponentMap> &map, const std::shared_ptr<TaskIndependentComponentType<T>> &t) {
     return t->get_task_specific(task, map);
 }
 
 template<typename... Args>
-static auto make_task_specific_tuple(const shared_ptr<AbstractTask> &task, 
-				     const unique_ptr<ComponentMap> &map,
+static auto make_task_specific_tuple(const std::shared_ptr<AbstractTask> &task, 
+				     const std::unique_ptr<ComponentMap> &map,
 				     const std::tuple<Args...>& args
 				     ) {
     return std::apply([&](const Args&... elems) {
@@ -587,27 +585,27 @@ static auto make_task_specific_tuple(const shared_ptr<AbstractTask> &task,
 
 
 template<typename Component, typename ComponentType, typename TIComponentArgs>
-auto makeTaskIndependentComponent(TIComponentArgs &&args) {
+auto make_shared_TaskIndependentComponent(TIComponentArgs &&args) {
     static_assert(std::derived_from<Component, ComponentType>,
                   "Component must derive from ComponentType");
     static_assert(ComponentMatchesTIComponentArgs<Component, TIComponentArgs>::value,
                   "The Component must match the Arguments");
     auto _return =  make_shared<TaskIndependentComponent<Component, ComponentType, TIComponentArgs>>(move(args));
-	cout << "mTIC" << endl;
+	std::cout << "mTIC" << std::endl;
 return _return;
 }
 
 int main() {
-    auto ti_c_eval = makeTaskIndependentComponent<ConstEvaluator, Evaluator>(tuple(2));
-    auto ti_w_eval = makeTaskIndependentComponent<WeightedEvaluator, Evaluator>(tuple(42, ti_c_eval));
-	auto ints = vector<int>{1,2};
-	auto evals = vector<shared_ptr<TaskIndependentComponentType<Evaluator>>>{ti_c_eval,ti_w_eval,ti_c_eval};
-    auto ti_sum_eval = makeTaskIndependentComponent<SumEvaluator, Evaluator>(tuple(evals));
+    auto ti_c_eval = make_shared_TaskIndependentComponent<ConstEvaluator, Evaluator>(std::tuple(2));
+    auto ti_w_eval = make_shared_TaskIndependentComponent<WeightedEvaluator, Evaluator>(std::tuple(42, ti_c_eval));
+	auto ints = std::vector<int>{1,2};
+	auto evals = std::vector<std::shared_ptr<TaskIndependentComponentType<Evaluator>>>{ti_c_eval,ti_w_eval,ti_c_eval};
+    auto ti_sum_eval = make_shared_TaskIndependentComponent<SumEvaluator, Evaluator>(std::tuple(evals));
     //auto w_eval = ti_w_eval->create_task_specific(AbstractTask{});
-    auto w_eval = ti_w_eval->get_task_specific(shared_ptr<AbstractTask> {});
+    auto w_eval = ti_w_eval->get_task_specific(std::shared_ptr<AbstractTask> {});
     w_eval->dump();
-	cout << "- - - - -- " << endl;
-    auto sum_eval = ti_sum_eval->get_task_specific(shared_ptr<AbstractTask> {});
+	std::cout << "- - - - -- " << std::endl;
+    auto sum_eval = ti_sum_eval->get_task_specific(std::shared_ptr<AbstractTask> {});
     sum_eval->dump();
-    cout << "done" << endl;
+	std::cout << "done" << std::endl;
 }
