@@ -1,3 +1,5 @@
+#ifndef COMPONENT_H
+#define COMPONENT_H
 
 #include <concepts>
 #include <iostream>
@@ -244,3 +246,4 @@ auto make_shared_TaskIndependentComponent(TIComponentArgs &&args) {
 return _return;
 }
 
+#endif

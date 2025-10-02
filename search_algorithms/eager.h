@@ -1,0 +1,32 @@
+
+#ifndef SEARCH_ALGORITHMS_EAGER_SEARCH_H
+#define SEARCH_ALGORITHMS_EAGER_SEARCH_H
+
+#include "../search_algorithm.h"
+
+#include <memory>
+#include <optional>
+#include <vector>
+
+#include "../evaluator.h"
+
+namespace eager_search {
+class EagerSearch : public SearchAlgorithm {
+    std::shared_ptr<Evaluator> f_evaluator;
+public:
+    explicit EagerSearch(
+        const std::shared_ptr<AbstractTask> &, 
+        const std::shared_ptr<Evaluator> &f_eval,
+        const std::string &description, utils::Verbosity verbosity)
+	: f_evaluator(f_eval)
+	{};
+
+    void dump() override {
+		std::cout << "eager with: " <<  std::endl;
+             	f_evaluator->dump() ; 
+	}
+
+};
+}
+
+#endif
