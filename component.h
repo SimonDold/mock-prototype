@@ -1,6 +1,10 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
-
+/*
+*
+*
+*
+* */
 #include "hash.h"
 #include "utils.h"
 
@@ -111,19 +115,21 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(
 
 template<typename BoundComponentType>
 class TypedComponent : public ComponentBase {
-protected:
-    virtual std::shared_ptr<BoundComponentType> create_bound_component_aux(
-        const std::shared_ptr<AbstractTask> &task,
-        const std::unique_ptr<BoundComponentMap> &component_map) const = 0;
 public:
     TypedComponent(const std::string &description, utils::Verbosity verbosity)
         : ComponentBase(description, verbosity) {
     }
-    virtual std::shared_ptr<BoundComponentType> create_bound_component(
-        const std::shared_ptr<AbstractTask> &task) const = 0;
-    virtual std::shared_ptr<BoundComponentType> fetch_bound_component(
+
+    virtual std::shared_ptr<BoundComponentType> bind_with_cache(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<BoundComponentMap> &component_map) const = 0;
+
+    std::shared_ptr<BoundComponentType> bind(
+        const std::shared_ptr<AbstractTask> &task) const {
+        std::unique_ptr<BoundComponentMap> component_map =
+            std::make_unique<BoundComponentMap>();
+        return bind_with_cache(task, component_map);
+    }
 };
 
 template<
@@ -134,10 +140,11 @@ template<
                  BoundComponent, ComponentArgs>::value
 class Component : public TypedComponent<BoundComponentType> {
     ComponentArgs args;
-    virtual std::shared_ptr<BoundComponentType> create_bound_component_aux(
+protected:
+    std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<BoundComponentMap> &component_map)
-        const override {
+        const {
         std::cout << "Creating bound " << this->get_description() << "..."
                   << std::endl;
         auto ts_args = recursively_bind_components(task, component_map, args);
@@ -157,39 +164,27 @@ public:
               ),
           args(move(_args)){};
 
-    std::shared_ptr<BoundComponentType> create_bound_component(
-        const std::shared_ptr<AbstractTask> &task) const override {
-        std::cout << "Creating bound " << this->get_description()
-                  << " as root component..." << std::endl;
-        std::unique_ptr<BoundComponentMap> component_map =
-            std::make_unique<BoundComponentMap>();
-        auto x = fetch_bound_component(task, component_map);
-        std::cout << "... created bound" << this->get_description()
-                  << " as root component!" << std::endl;
-        return x;
-    }
-
-    std::shared_ptr<BoundComponentType> fetch_bound_component(
+    virtual std::shared_ptr<BoundComponentType> bind_with_cache(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<BoundComponentMap> &component_map)
         const override {
-        std::shared_ptr<BoundComponent> component;
+        std::shared_ptr<BoundComponentType> component;
         const std::pair<
             const ComponentBase *, const std::shared_ptr<AbstractTask> *>
             key = std::make_pair(this, &task);
         if (component_map->count(key)) {
             std::cout << "Reusing bound component '" << this->description
                       << "'." << std::endl;
-            component =
-                dynamic_pointer_cast<BoundComponent>(component_map->at(key));
+            component = std::dynamic_pointer_cast<BoundComponentType>(
+                component_map->at(key));
         } else {
-            component = dynamic_pointer_cast<BoundComponent>(
-                create_bound_component_aux(task, component_map));
+            component = create_bound_component(task, component_map);
             component_map->emplace(key, component);
         }
 
         return component;
     }
+
 };
 
 // Other names for bind:
@@ -235,7 +230,7 @@ static auto recursively_bind_components(
         args);
 }
 
-// for a Component, return the result of `fetch_bound_component`.
+// for a Component, return the result of `bind`.
 template<
     typename BoundComponent, typename BoundComponentType,
     typename ComponentArgs>
@@ -245,16 +240,16 @@ static auto recursively_bind_components(
     const std::shared_ptr<
         Component<BoundComponent, BoundComponentType, ComponentArgs>>
         &component) {
-    return component->fetch_bound_component(task, map);
+    return component->bind_with_cache(task, map);
 }
 
-// for a TypedComponent, return the result of `fetch_bound_component`.
+// for a TypedComponent, return the result of `bind`.
 template<typename T>
 static auto recursively_bind_components(
     const std::shared_ptr<AbstractTask> &task,
     const std::unique_ptr<BoundComponentMap> &map,
     const std::shared_ptr<TypedComponent<T>> &component) {
-    return component->fetch_bound_component(task, map);
+    return component->bind_with_cache(task, map);
 }
 
 template<

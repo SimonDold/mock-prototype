@@ -24,11 +24,11 @@ int main() {
             std::tuple(evals, "sum_eval", utils::Verbosity::NORMAL));
     // auto w_eval = ti_w_eval->create_bound_component(AbstractTask{});
     auto w_eval =
-        ti_w_eval->create_bound_component(std::shared_ptr<AbstractTask>{});
+        ti_w_eval->bind(std::shared_ptr<AbstractTask>{});
     w_eval->dump();
     std::cout << "- - - - -- " << std::endl;
     auto sum_eval =
-        ti_sum_eval->create_bound_component(std::shared_ptr<AbstractTask>{});
+        ti_sum_eval->bind(std::shared_ptr<AbstractTask>{});
     sum_eval->dump();
 
     std::cout << "- - - " << std::endl;
@@ -44,7 +44,7 @@ int main() {
                 ti_sum_eval, dummy_ptr, "eager" /*1*/,
                 utils::Verbosity::NORMAL));
     auto eager =
-        ti_eager->create_bound_component(std::shared_ptr<AbstractTask>{});
+        ti_eager->bind(std::shared_ptr<AbstractTask>{});
     eager->dump();
     std::cout << "done" << std::endl;
 }
