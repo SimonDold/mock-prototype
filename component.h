@@ -98,15 +98,18 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(const std::shared_
 
 
 // similar words with diffferen meaning
-// create: function of the Component / ComponentType
-// fetch: creates if not in boundcomponent map yet, otherwise reuse
 // make: forwards to make_shared
+// bind: you can bind everything to a task, for some types it will make no difference (e.g. int)
+//
+// A component can either fetch or create its BoundComponent given a task
+// create: function of the Component / ComponentType; actually computes the bound_component
+// fetch: creates if not in boundcomponent map yet, otherwise reuse from BoundComponentMap
 
 
 template<typename BoundComponentType>
 class ComponentType : public ComponentBase {
 protected:
-    virtual std::shared_ptr<BoundComponentType> create_bound_component(
+    virtual std::shared_ptr<BoundComponentType> create_bound_component_aux(
         const std::shared_ptr<AbstractTask> &task
 	 	, const std::unique_ptr<BoundComponentMap> &component_map
 	) const = 0;
@@ -115,9 +118,9 @@ public :
         const std::string &description, utils::Verbosity verbosity)
         : ComponentBase(description, verbosity) {
     }
-    virtual std::shared_ptr<BoundComponentType> fetch_bound_component(
+    virtual std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task) const = 0;
-    virtual std::shared_ptr<BoundComponentType> fetch_bound_component_aux(
+    virtual std::shared_ptr<BoundComponentType> fetch_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<BoundComponentMap> &component_map) const = 0;
 };
@@ -129,7 +132,7 @@ requires
 BoundComponentMatchesComponentArgs<BoundComponent, ComponentArgs>::value
 class Component : public ComponentType<BoundComponentType>{
     ComponentArgs args;
-    virtual std::shared_ptr<BoundComponentType> create_bound_component(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<BoundComponentMap> &component_map) const override {
+    virtual std::shared_ptr<BoundComponentType> create_bound_component_aux(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<BoundComponentMap> &component_map) const override {
         auto ts_args = bind(task, component_map, args);
         return make_shared_from_tuple<BoundComponent>(task, ts_args);
     }
@@ -145,7 +148,7 @@ public:
 	,args(move(_args)) {};
 
     
-    std::shared_ptr<BoundComponentType> fetch_bound_component(
+    std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task
 	) 
 	const override {
@@ -154,14 +157,14 @@ public:
                      << std::endl;
         std::unique_ptr<BoundComponentMap> component_map =
             std::make_unique<BoundComponentMap>();
-	auto x = fetch_bound_component_aux(task, component_map);
+	auto x = fetch_bound_component(task, component_map);
 		std::cout << "... Created "
                      << this->get_description() << " as root component!"
                      << std::endl;
-        return x;//fetch_bound_component_aux(task, component_map);
+        return x;//fetch_bound_component(task, component_map);
     }
 
-    std::shared_ptr<BoundComponentType> fetch_bound_component_aux(
+    std::shared_ptr<BoundComponentType> fetch_bound_component(
         const std::shared_ptr<AbstractTask> &task
 		,const std::unique_ptr<BoundComponentMap> &component_map
 	) 
@@ -184,7 +187,7 @@ public:
                       << this->description 
 			<< "'..." << std::endl;
             component = dynamic_pointer_cast<BoundComponent>(
-                create_bound_component(
+                create_bound_component_aux(
                     task, component_map
 				));
             component_map->emplace(key, component);
@@ -230,17 +233,17 @@ static auto bind(const std::shared_ptr<AbstractTask> &task,
     }, args);
 }
 
-// for a Component, return the result of `fetch_bound_component_aux`.
+// for a Component, return the result of `fetch_bound_component`.
 template<typename BoundComponent, typename BoundComponentType, typename ComponentArgs>
 static auto bind(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<BoundComponentMap> &map, const std::shared_ptr<Component<BoundComponent, BoundComponentType, ComponentArgs>> &component) {
-    return component->fetch_bound_component_aux(task, map);
+    return component->fetch_bound_component(task, map);
 }
 
-// for a ComponentType, return the result of `fetch_bound_component_aux`.
+// for a ComponentType, return the result of `fetch_bound_component`.
 template<typename T>
 static auto bind(const std::shared_ptr<AbstractTask> &task,
 				     const std::unique_ptr<BoundComponentMap> &map, const std::shared_ptr<ComponentType<T>> &component_type) {
-    return component_type->fetch_bound_component_aux(task, map);
+    return component_type->fetch_bound_component(task, map);
 }
 
 
