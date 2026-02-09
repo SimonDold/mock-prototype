@@ -62,7 +62,6 @@ struct TaskSpecifiedArgs {
     using type = decltype(make_task_specific_tuple(std::declval<std::shared_ptr<AbstractTask> >(), std::declval<std::unique_ptr<ComponentMap>>(), std::declval<Tuple>()));
 };
 
-
 template<typename T, typename Tuple>
 struct PrependedTuple;
 
@@ -71,7 +70,6 @@ struct PrependedTuple<T, std::tuple<Ts...>> {
     using type = std::tuple<T, Ts...>;
 };
 
-
 template<typename Component, typename Tuple>
 struct IsConstructibleFromArgsTuple;
 
@@ -79,12 +77,6 @@ template<typename Component, typename... Ts>
 struct IsConstructibleFromArgsTuple<Component, std::tuple<Ts...>> {
     static constexpr bool value = std::constructible_from<Component, Ts...>;
 };
-
-
-
-
-
-
 
 
 template<typename Component, typename TIComponentArgs>
@@ -104,7 +96,10 @@ static std::shared_ptr<Component> make_shared_from_tuple(const std::shared_ptr<A
 }
 
 
-
+// similar words with diffferen meaning
+// create: function of the TI_component
+// get: creates if not in component map yet, otherwise reuse
+// make: forwards to make_shared
 
 
 template<typename ComponentType>
@@ -121,7 +116,7 @@ public :
     }
     virtual std::shared_ptr<ComponentType> get_task_specific(
         const std::shared_ptr<AbstractTask> &task) const = 0;
-    virtual std::shared_ptr<ComponentType> get_task_specific(
+    virtual std::shared_ptr<ComponentType> get_task_specific_aux(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<ComponentMap> &component_map) const = 0;
 };
@@ -153,15 +148,19 @@ public:
         const std::shared_ptr<AbstractTask> &task
 	) 
 	const override {
-		std::cout << "Creating "
+		std::cout << "Creating task specific "
                      << this->get_description() << " as root component..."
                      << std::endl;
         std::unique_ptr<ComponentMap> component_map =
             std::make_unique<ComponentMap>();
-        return get_task_specific(task, component_map);
+	auto x = get_task_specific_aux(task, component_map);
+		std::cout << "... Creatied "
+                     << this->get_description() << " as root component!"
+                     << std::endl;
+        return x;//get_task_specific(task, component_map);
     }
 
-    std::shared_ptr<ComponentType> get_task_specific(
+    std::shared_ptr<ComponentType> get_task_specific_aux(
         const std::shared_ptr<AbstractTask> &task
 		,const std::unique_ptr<ComponentMap> &component_map
 	) 
@@ -188,7 +187,12 @@ public:
                     task, component_map
 				));
             component_map->emplace(key, component);
+			std::cout
+                      << "... Created task specific component '"
+                      << this->description 
+			<< "'" << std::endl;
         }
+	
         return component;
     }
 };
@@ -215,13 +219,13 @@ static auto make_task_specific(const std::shared_ptr<AbstractTask> &task, const 
 
 template<typename T1, typename T2, typename T3>
 static auto make_task_specific(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<ComponentMap> &map, const std::shared_ptr<TaskIndependentComponent<T1, T2, T3>> &t) {
-    return t->get_task_specific(task, map);
+    return t->get_task_specific_aux(task, map);
 }
 
 template<typename T>
 static auto make_task_specific(const std::shared_ptr<AbstractTask> &task,
 				     const std::unique_ptr<ComponentMap> &map, const std::shared_ptr<TaskIndependentComponentType<T>> &t) {
-    return t->get_task_specific(task, map);
+    return t->get_task_specific_aux(task, map);
 }
 
 template<typename... Args>
@@ -238,9 +242,9 @@ static auto make_task_specific_tuple(const std::shared_ptr<AbstractTask> &task,
 template<typename Component, typename ComponentType, typename TIComponentArgs>
 auto make_shared_TaskIndependentComponent(TIComponentArgs &&args) {
     static_assert(std::derived_from<Component, ComponentType>,
-                  "Component must derive from ComponentType");
+                  "CUSTOM MESSAGE: Component must derive from ComponentType");
     static_assert(ComponentMatchesTIComponentArgs<Component, TIComponentArgs>::value,
-                  "The Component must match the Arguments");
+                  "CUSTOM MESSAGE: The Component must match the Arguments");
     auto _return =  make_shared<TaskIndependentComponent<Component, ComponentType, TIComponentArgs>>(move(args));
 	std::cout << "mTIC" << std::endl;
 return _return;
