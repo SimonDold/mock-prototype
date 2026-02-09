@@ -115,14 +115,36 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(
 
 template<typename BoundComponentType>
 class TypedComponent : public ComponentBase {
+    virtual std::shared_ptr<BoundComponentType> create_bound_component(
+        const std::shared_ptr<AbstractTask> &task,
+        const std::unique_ptr<BoundComponentMap> &component_map) const
+        = 0;
+
 public:
+    std::shared_ptr<BoundComponentType> bind_with_cache(
+        const std::shared_ptr<AbstractTask> &task,
+        const std::unique_ptr<BoundComponentMap> &component_map)
+        const {
+        std::shared_ptr<BoundComponentType> component;
+        const std::pair<
+            const ComponentBase *, const std::shared_ptr<AbstractTask> *>
+            key = std::make_pair(this, &task);
+        if (component_map->count(key)) {
+            std::cout << "Reusing bound component '" << this->description
+                      << "'." << std::endl;
+            component = std::dynamic_pointer_cast<BoundComponentType>(
+                component_map->at(key));
+        } else {
+            component = create_bound_component(task, component_map);
+            component_map->emplace(key, component);
+        }
+
+        return component;
+    }
+
     TypedComponent(const std::string &description, utils::Verbosity verbosity)
         : ComponentBase(description, verbosity) {
     }
-
-    virtual std::shared_ptr<BoundComponentType> bind_with_cache(
-        const std::shared_ptr<AbstractTask> &task,
-        const std::unique_ptr<BoundComponentMap> &component_map) const = 0;
 
     std::shared_ptr<BoundComponentType> bind(
         const std::shared_ptr<AbstractTask> &task) const {
@@ -140,7 +162,6 @@ template<
                  BoundComponent, ComponentArgs>::value
 class Component : public TypedComponent<BoundComponentType> {
     ComponentArgs args;
-protected:
     std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<BoundComponentMap> &component_map)
@@ -164,32 +185,9 @@ public:
               ),
           args(move(_args)){};
 
-    virtual std::shared_ptr<BoundComponentType> bind_with_cache(
-        const std::shared_ptr<AbstractTask> &task,
-        const std::unique_ptr<BoundComponentMap> &component_map)
-        const override {
-        std::shared_ptr<BoundComponentType> component;
-        const std::pair<
-            const ComponentBase *, const std::shared_ptr<AbstractTask> *>
-            key = std::make_pair(this, &task);
-        if (component_map->count(key)) {
-            std::cout << "Reusing bound component '" << this->description
-                      << "'." << std::endl;
-            component = std::dynamic_pointer_cast<BoundComponentType>(
-                component_map->at(key));
-        } else {
-            component = create_bound_component(task, component_map);
-            component_map->emplace(key, component);
-        }
-
-        return component;
-    }
 
 };
 
-// Other names for bind:
-// recursively_bind_components()!
-//
 
 // for a type T that is neither a vector/tuple nor a Component, just return the
 // thing.
