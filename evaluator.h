@@ -6,7 +6,7 @@
 // fd
 //
 //
-class Evaluator : public Component {
+class Evaluator : public BoundComponent {
 public:
     virtual void dump() = 0;
 };
