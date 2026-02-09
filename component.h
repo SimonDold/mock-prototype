@@ -121,7 +121,6 @@ public:
             component = create_bound_component(task, component_map);
             component_map->emplace(key, component);
         }
-
         return component;
     }
 
@@ -237,10 +236,9 @@ auto make_shared_component(ComponentArgs &&args) {
         BoundComponentMatchesComponentArgs<
             BoundComponent, ComponentArgs>::value,
         "CUSTOM MESSAGE: The BoundComponent must match the Arguments");
-    auto _return = make_shared<
+        return make_shared<
         Component<BoundComponent, BoundComponentType, ComponentArgs>>(
         move(args));
-    return _return;
 }
 
 #endif
