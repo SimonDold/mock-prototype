@@ -36,7 +36,7 @@ int main() {
      * not possible:
      * auto ti_dummy = make_shared_Component<Dummy>(666);
      */
-    auto ti_eager = make_shared_Component<eager_search::EagerSearch, SearchAlgorithm>(std::tuple(ti_sum_eval, dummy_ptr, /*"eager"*/1, utils::Verbosity::NORMAL));
+    auto ti_eager = make_shared_Component<eager_search::EagerSearch, SearchAlgorithm>(std::tuple(ti_sum_eval, dummy_ptr, "eager"/*1*/, utils::Verbosity::NORMAL));
     auto eager = ti_eager->fetch_bound_component(std::shared_ptr<AbstractTask>{});
     eager->dump();
     std::cout << "done" << std::endl;
