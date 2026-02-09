@@ -133,6 +133,7 @@ BoundComponentMatchesComponentArgs<BoundComponent, ComponentArgs>::value
 class Component : public ComponentType<BoundComponentType>{
     ComponentArgs args;
     virtual std::shared_ptr<BoundComponentType> create_bound_component_aux(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<BoundComponentMap> &component_map) const override {
+        std::cout << "Creating bound " << this->get_description() << "..." << std::endl;
         auto ts_args = bind(task, component_map, args);
         return make_shared_from_tuple<BoundComponent>(task, ts_args);
     }
