@@ -135,7 +135,9 @@ class Component : public ComponentType<BoundComponentType>{
     virtual std::shared_ptr<BoundComponentType> create_bound_component_aux(const std::shared_ptr<AbstractTask> &task, const std::unique_ptr<BoundComponentMap> &component_map) const override {
         std::cout << "Creating bound " << this->get_description() << "..." << std::endl;
         auto ts_args = bind(task, component_map, args);
-        return make_shared_from_tuple<BoundComponent>(task, ts_args);
+        auto _return = make_shared_from_tuple<BoundComponent>(task, ts_args);
+        std::cout << "... created bound " << this->get_description() << "." << std::endl;
+        return _return;
     }
     
 public:
@@ -153,13 +155,13 @@ public:
         const std::shared_ptr<AbstractTask> &task
 	) 
 	const override {
-		std::cout << "Creating task specific "
+		std::cout << "Creating bound "
                      << this->get_description() << " as root component..."
                      << std::endl;
         std::unique_ptr<BoundComponentMap> component_map =
             std::make_unique<BoundComponentMap>();
 	auto x = fetch_bound_component(task, component_map);
-		std::cout << "... Created "
+		std::cout << "... created bound"
                      << this->get_description() << " as root component!"
                      << std::endl;
         return x;//fetch_bound_component(task, component_map);
@@ -177,25 +179,17 @@ public:
             const std::shared_ptr<AbstractTask> *>
             key = std::make_pair(this, &task);
         if (component_map->count(key)) {
-			std::cout << "Reusing task specific component '"
+			std::cout << "Reusing bound component '"
                       << this->description
-			<< "'..." << std::endl;
+			<< "'." << std::endl;
             component = dynamic_pointer_cast<BoundComponent>(
                 component_map->at(key));
         } else {
-			std::cout
-                      << "Creating task specific component '"
-                      << this->description 
-			<< "'..." << std::endl;
             component = dynamic_pointer_cast<BoundComponent>(
                 create_bound_component_aux(
                     task, component_map
 				));
             component_map->emplace(key, component);
-			std::cout
-                      << "... Created task specific component '"
-                      << this->description 
-			<< "'" << std::endl;
         }
 	
         return component;
