@@ -98,6 +98,7 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(const std::shared_
 
 
 // similar words with diffferen meaning
+//
 // make: forwards to make_shared
 // bind: you can bind everything to a task, for some types it will make no difference (e.g. int)
 //
