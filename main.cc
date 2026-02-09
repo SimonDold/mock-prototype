@@ -20,8 +20,8 @@
 int main() {
     auto ti_c_eval = make_shared_component<ConstEvaluator, Evaluator>(std::tuple(2, "c_eval", utils::Verbosity::NORMAL));
     auto ti_w_eval = make_shared_component<WeightedEvaluator, Evaluator>(std::tuple(42, ti_c_eval, "w_eval", utils::Verbosity::NORMAL));
-    auto evals = std::vector<std::shared_ptr<ComponentType<Evaluator>>>{ti_c_eval,ti_w_eval,ti_c_eval};
-    std::shared_ptr<ComponentType<Evaluator>> ti_sum_eval = make_shared_component<SumEvaluator, Evaluator>(std::tuple(evals, "sum_eval", utils::Verbosity::NORMAL));
+    auto evals = std::vector<std::shared_ptr<TypedComponent<Evaluator>>>{ti_c_eval,ti_w_eval,ti_c_eval};
+    std::shared_ptr<TypedComponent<Evaluator>> ti_sum_eval = make_shared_component<SumEvaluator, Evaluator>(std::tuple(evals, "sum_eval", utils::Verbosity::NORMAL));
     //auto w_eval = ti_w_eval->create_bound_component(AbstractTask{});
     auto w_eval = ti_w_eval->create_bound_component(std::shared_ptr<AbstractTask> {});
     w_eval->dump();
