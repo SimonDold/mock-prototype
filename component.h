@@ -244,7 +244,7 @@ static auto bind(const std::shared_ptr<AbstractTask> &task,
 
 
 template<typename BoundComponent, typename BoundComponentType, typename ComponentArgs>
-auto make_shared_Component(ComponentArgs &&args) {
+auto make_shared_component(ComponentArgs &&args) {
     static_assert(std::derived_from<BoundComponent, BoundComponentType>,
                   "CUSTOM MESSAGE: BoundComponent must derive from BoundComponentType");
     static_assert(BoundComponentMatchesComponentArgs<BoundComponent, ComponentArgs>::value,
