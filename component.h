@@ -1,10 +1,6 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
-/*
-*
-*
-*
-* */
+
 #include "hash.h"
 #include "utils.h"
 
@@ -33,7 +29,6 @@ protected:
 public:
     ComponentBase(const std::string &description, utils::Verbosity verbosity)
         : description(description), verbosity(verbosity) {
-        std::cout << " BASE " << description << std::endl;
     }
 public:
     virtual ~ComponentBase() = default;
@@ -102,16 +97,6 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(
         args);
 }
 
-// similar words with diffferen meaning
-//
-// make: forwards to make_shared
-// recursively_bind_components: you can bind everything to a task, for some
-// types it will make no difference (e.g. int)
-//
-// A component can either fetch or create its BoundComponent given a task
-// create: function of the Component / TypedComponent; actually computes the
-// bound_component fetch: creates if not in boundcomponent map yet, otherwise
-// reuse from BoundComponentMap
 
 template<typename BoundComponentType>
 class TypedComponent : public ComponentBase {
@@ -130,8 +115,6 @@ public:
             const ComponentBase *, const std::shared_ptr<AbstractTask> *>
             key = std::make_pair(this, &task);
         if (component_map->count(key)) {
-            std::cout << "Reusing bound component '" << this->description
-                      << "'." << std::endl;
             component = std::dynamic_pointer_cast<BoundComponentType>(
                 component_map->at(key));
         } else {
@@ -166,13 +149,8 @@ class Component : public TypedComponent<BoundComponentType> {
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<BoundComponentMap> &component_map)
         const {
-        std::cout << "Creating bound " << this->get_description() << "..."
-                  << std::endl;
         auto ts_args = recursively_bind_components(task, component_map, args);
-        auto _return = make_shared_from_tuple<BoundComponent>(task, ts_args);
-        std::cout << "... created bound " << this->get_description() << "."
-                  << std::endl;
-        return _return;
+        return make_shared_from_tuple<BoundComponent>(task, ts_args);
     }
 
 public:
@@ -184,8 +162,6 @@ public:
                   _args) // get verbosity (always last argument)
               ),
           args(move(_args)){};
-
-
 };
 
 
