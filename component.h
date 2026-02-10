@@ -9,7 +9,7 @@
 
 class AbstractTask;
 
-// common base class for all bound components (OpneLists, Evaluators, etc)
+// common base class for all bound components (OpenLists, Evaluators, etc)
 // they are *bound* to a task.
 class BoundComponent {
 public:
@@ -88,14 +88,8 @@ public:
 template<
     typename BoundComponent, typename BoundComponentType,
     typename ComponentArgs>
-auto make_shared_component(ComponentArgs &&args) {
-    static_assert(
-        std::derived_from<BoundComponent, BoundComponentType>,
-        "CUSTOM MESSAGE: BoundComponent must derive from BoundComponentType");
-    static_assert(
-        BoundComponentMatchesComponentArgs<
-            BoundComponent, ComponentArgs>::value,
-        "CUSTOM MESSAGE: The BoundComponent must match the Arguments");
+std::shared_ptr<TypedComponent<BoundComponentType>>
+make_shared_component(ComponentArgs &&args) {
     return make_shared<
         Component<BoundComponent, BoundComponentType, ComponentArgs>>(
         move(args));
