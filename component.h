@@ -21,19 +21,8 @@ public:
 
 // common base class for templated classes about TypedComponent and Components
 class ComponentBase {
-protected:
-    const std::string description;
-    const utils::Verbosity verbosity;
-    // // mutable utils::LogProxy log;
-public:
-    ComponentBase(const std::string &description, utils::Verbosity verbosity)
-        : description(description), verbosity(verbosity) {
-    }
 public:
     virtual ~ComponentBase() = default;
-    std::string get_description() const {
-        return description;
-    }
 };
 
 using CacheKey = const std::pair<const ComponentBase *,
@@ -92,13 +81,17 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(
 template<typename BoundComponentType>
 class TypedComponent : public ComponentBase {
 protected:
+    const std::string description;
+    const utils::Verbosity verbosity;
+    // // mutable utils::LogProxy log;
+
     virtual std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<Cache> &cache) const = 0;
 
 public:
     TypedComponent(const std::string &description, utils::Verbosity verbosity)
-        : ComponentBase(description, verbosity) {
+        : description(description), verbosity(verbosity) {
     }
 
     std::shared_ptr<BoundComponentType> bind_with_cache(
