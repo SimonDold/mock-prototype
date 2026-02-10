@@ -22,14 +22,14 @@ public:
     virtual ~ComponentBase() = default;
 };
 
-template<typename BoundComponentType>
+template<typename Category>
 class TypedComponent : public ComponentBase {
 protected:
     const std::string description;
     const utils::Verbosity verbosity;
     // // mutable utils::LogProxy log;
 
-    virtual std::shared_ptr<BoundComponentType> create_bound_component(
+    virtual std::shared_ptr<Category> create_bound_component(
         const std::shared_ptr<AbstractTask> &task, Cache &cache) const = 0;
 
 public:
@@ -37,13 +37,13 @@ public:
         : description(description), verbosity(verbosity) {
     }
 
-    std::shared_ptr<BoundComponentType> bind_with_cache(
+    std::shared_ptr<Category> bind_with_cache(
         const std::shared_ptr<AbstractTask> &task, Cache &cache) const {
-        std::shared_ptr<BoundComponentType> component;
+        std::shared_ptr<Category> component;
         const CacheKey key = std::make_pair(this, task.get());
         if (cache.count(key)) {
             std::shared_ptr<BoundComponent> entry = cache.at(key);
-            component = std::dynamic_pointer_cast<BoundComponentType>(entry);
+            component = std::dynamic_pointer_cast<Category>(entry);
             assert(component);
         } else {
             component = create_bound_component(task, cache);
@@ -52,30 +52,28 @@ public:
         return component;
     }
 
-    std::shared_ptr<BoundComponentType> bind(
+    std::shared_ptr<Category> bind(
         const std::shared_ptr<AbstractTask> &task) const {
         Cache cache;
         return bind_with_cache(task, cache);
     }
 };
 
-template<
-    typename BoundComponent,
-    ComponentCategoryOf<BoundComponent> BoundComponentType,
-    ComponentArgsFor<BoundComponent> Args>
-class Component : public TypedComponent<BoundComponentType> {
+template<typename T, ComponentCategoryOf<T> Category, ComponentArgsFor<T> Args>
+class Component : public TypedComponent<Category> {
     Args args;
+
 protected:
-    virtual std::shared_ptr<BoundComponentType> create_bound_component(
+    virtual std::shared_ptr<Category> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         Cache &cache) const override {
         auto ts_args = recursively_bind_components(task, cache, args);
-        return make_shared_from_tuple<BoundComponent>(task, ts_args);
+        return make_shared_from_tuple<T>(task, ts_args);
     }
 
 public:
     explicit Component(Args &&_args)
-        : TypedComponent<BoundComponentType>(
+        : TypedComponent<Category>(
               // get description (always second to last argument)
               std::get<std::tuple_size_v<Args> - 2>(_args),
               // get verbosity (always last argument)
@@ -83,14 +81,9 @@ public:
           args(move(_args)){};
 };
 
-template<
-    typename BoundComponent, typename BoundComponentType,
-    typename ComponentArgs>
-std::shared_ptr<TypedComponent<BoundComponentType>>
-make_shared_component(ComponentArgs &&args) {
-    return make_shared<
-        Component<BoundComponent, BoundComponentType, ComponentArgs>>(
-        move(args));
+template<typename T, typename Category, typename Args>
+std::shared_ptr<TypedComponent<Category>> make_shared_component(Args &&args) {
+    return make_shared<Component<T, Category, Args>>(move(args));
 }
 
 #endif
