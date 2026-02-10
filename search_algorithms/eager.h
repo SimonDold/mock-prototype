@@ -2,7 +2,6 @@
 #ifndef SEARCH_ALGORITHMS_EAGER_SEARCH_H
 #define SEARCH_ALGORITHMS_EAGER_SEARCH_H
 
-#include "../dummy.h"
 #include "../evaluator.h"
 #include "../open_list.h"
 #include "../search_algorithm.h"
@@ -18,18 +17,15 @@ namespace eager_search {
 class EagerSearch : public SearchAlgorithm {
     std::unique_ptr<StateOpenList> open_list;
     std::shared_ptr<Evaluator> f_evaluator;
-    int number;
 public:
     explicit EagerSearch(
         const std::shared_ptr<AbstractTask> &,
         const std::shared_ptr<OpenListFactory> &open,
         const std::shared_ptr<Evaluator> &f_eval,
-        const std::shared_ptr<Dummy> &dummy, const std::string &description,
-        utils::Verbosity verbosity)
-        : f_evaluator(f_eval), number(dummy->get_int()){};
+        const std::string &description, utils::Verbosity verbosity);
 
     void dump() override {
-        std::cout << "eager" << number << " with: " << std::endl;
+        std::cout << "eager" << " with:\n f-eval:" << std::endl;
         f_evaluator->dump();
     }
 };

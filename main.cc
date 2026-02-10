@@ -35,11 +35,6 @@ int main() {
 
     std::cout << "- - - " << std::endl;
 
-    std::shared_ptr<Dummy> dummy_ptr = std::make_shared<Dummy>(99);
-    /*
-     * not possible:
-     * auto ti_dummy = make_shared_Component<Dummy>(666);
-     */
     std::shared_ptr<TypedComponent<OpenListFactory>> ti_tb_olist = 
         make_shared_component<TieBreakingOpenListFactory, OpenListFactory>(
             std::tuple(evals, false, false, "tie", utils::Verbosity::NORMAL));
@@ -47,7 +42,7 @@ int main() {
         make_shared_component<eager_search::EagerSearch, SearchAlgorithm>(
             std::tuple(
                 ti_tb_olist,
-                ti_sum_eval, dummy_ptr, "eager" /*1*/,
+                ti_sum_eval, "eager" /*1*/,
                 utils::Verbosity::NORMAL));
     auto eager =
         ti_eager->bind(std::shared_ptr<AbstractTask>{});
