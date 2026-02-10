@@ -3,6 +3,7 @@
 
 #include "hash.h"
 #include "utils.h"
+#include "utils/language.h"
 
 #include <concepts>
 #include <iostream>
@@ -39,23 +40,6 @@ struct BoundArgs {
     using type = decltype(recursively_bind_components(
         std::declval<std::shared_ptr<AbstractTask>>(),
         std::declval<std::unique_ptr<Cache>>(), std::declval<Tuple>()));
-};
-
-template<typename T, typename Tuple>
-struct PrependedTuple;
-
-template<typename T, typename... Ts>
-struct PrependedTuple<T, std::tuple<Ts...>> {
-    using type = std::tuple<T, Ts...>;
-};
-
-template<typename BoundComponent, typename Tuple>
-struct IsConstructibleFromArgsTuple;
-
-template<typename BoundComponent, typename... Ts>
-struct IsConstructibleFromArgsTuple<BoundComponent, std::tuple<Ts...>> {
-    static constexpr bool value =
-        std::constructible_from<BoundComponent, Ts...>;
 };
 
 template<typename BoundComponent, typename ComponentArgs>
