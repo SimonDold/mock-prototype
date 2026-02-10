@@ -25,7 +25,6 @@ protected:
     const std::string description;
     const utils::Verbosity verbosity;
     // // mutable utils::LogProxy log;
-    // // PlanManager plan_manager; // only used for SearchAlgorithms
 public:
     ComponentBase(const std::string &description, utils::Verbosity verbosity)
         : description(description), verbosity(verbosity) {
@@ -35,15 +34,11 @@ public:
     std::string get_description() const {
         return description;
     }
-    // PlanManager &get_plan_manager() {
-    //     return plan_manager;
-    // }
 };
 
-using Cache = utils::HashMap<
-    const std::pair<
-        const ComponentBase *, const std::shared_ptr<AbstractTask> *>,
-    std::shared_ptr<BoundComponent>>;
+using CacheKey = const std::pair<const ComponentBase *,
+                                 const std::shared_ptr<AbstractTask> *>;
+using Cache = utils::HashMap<CacheKey, std::shared_ptr<BoundComponent>>;
 
 template<typename... Args>
 static auto recursively_bind_components(
@@ -109,9 +104,7 @@ public:
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<Cache> &cache) const {
         std::shared_ptr<BoundComponentType> component;
-        const std::pair<
-            const ComponentBase *, const std::shared_ptr<AbstractTask> *>
-            key = std::make_pair(this, &task);
+        const auto key = std::make_pair(this, &task);
         if (cache->count(key)) {
             component =
                 std::dynamic_pointer_cast<BoundComponentType>(cache->at(key));
@@ -147,11 +140,10 @@ class Component : public TypedComponent<BoundComponentType> {
 public:
     explicit Component(ComponentArgs &&_args)
         : TypedComponent<BoundComponentType>(
-              std::get<std::tuple_size_v<ComponentArgs> - 2>(
-                  _args), // get description (always second to last argument)
-              std::get<std::tuple_size_v<ComponentArgs> - 1>(
-                  _args) // get verbosity (always last argument)
-              ),
+              // get description (always second to last argument)
+              std::get<std::tuple_size_v<ComponentArgs> - 2>(_args),
+              // get verbosity (always last argument)
+              std::get<std::tuple_size_v<ComponentArgs> - 1>(_args)),
           args(move(_args)){};
 };
 
