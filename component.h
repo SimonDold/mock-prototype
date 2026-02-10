@@ -91,6 +91,7 @@ static std::shared_ptr<BoundComponent> make_shared_from_tuple(
 
 template<typename BoundComponentType>
 class TypedComponent : public ComponentBase {
+protected:
     virtual std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<Cache> &cache) const = 0;
@@ -130,9 +131,10 @@ template<
                  BoundComponent, ComponentArgs>::value
 class Component : public TypedComponent<BoundComponentType> {
     ComponentArgs args;
-    std::shared_ptr<BoundComponentType> create_bound_component(
+protected:
+    virtual std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
-        const std::unique_ptr<Cache> &cache) const {
+        const std::unique_ptr<Cache> &cache) const override {
         auto ts_args = recursively_bind_components(task, cache, args);
         return make_shared_from_tuple<BoundComponent>(task, ts_args);
     }
@@ -180,23 +182,11 @@ static auto recursively_bind_components(
         args);
 }
 
-template<
-    typename BoundComponent, typename BoundComponentType,
-    typename ComponentArgs>
-static auto recursively_bind_components(
-    const std::shared_ptr<AbstractTask> &task,
-    const std::unique_ptr<Cache> &cache,
-    const std::shared_ptr<
-        Component<BoundComponent, BoundComponentType, ComponentArgs>>
-        &component) {
-    return component->bind_with_cache(task, cache);
-}
-
 template<typename T>
 static auto recursively_bind_components(
     const std::shared_ptr<AbstractTask> &task,
     const std::unique_ptr<Cache> &cache,
-    const std::shared_ptr<TypedComponent<T>> &component) {
+    const std::shared_ptr<T> &component) {
     return component->bind_with_cache(task, cache);
 }
 
