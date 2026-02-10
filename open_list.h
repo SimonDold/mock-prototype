@@ -4,6 +4,7 @@
 #include "operator_id.h"
 #include "state_id.h"
 
+#include <iostream>
 #include <set>
 
 class StateID;

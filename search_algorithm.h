@@ -3,6 +3,8 @@
 
 #include "component.h"
 
+#include <iostream>
+
 class SearchAlgorithm : public BoundComponent {
 public:
     virtual void dump() = 0;

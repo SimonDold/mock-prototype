@@ -3,6 +3,8 @@
 
 #include "component.h"
 
+#include <iostream>
+
 // fd
 //
 //
