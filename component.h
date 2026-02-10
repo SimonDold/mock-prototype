@@ -82,8 +82,9 @@ public:
         std::shared_ptr<BoundComponentType> component;
         const CacheKey key = std::make_pair(this, task.get());
         if (cache.count(key)) {
-            component =
-                std::dynamic_pointer_cast<BoundComponentType>(cache.at(key));
+            std::shared_ptr<BoundComponent> entry = cache.at(key);
+            component = std::dynamic_pointer_cast<BoundComponentType>(entry);
+            assert(component);
         } else {
             component = create_bound_component(task, cache);
             cache.emplace(key, component);
