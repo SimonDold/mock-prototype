@@ -26,8 +26,7 @@ public:
     virtual ~ComponentBase() = default;
 };
 
-using CacheKey = const std::pair<const ComponentBase *,
-                                 const std::shared_ptr<AbstractTask> *>;
+using CacheKey = const std::pair<const ComponentBase *, const AbstractTask *>;
 using Cache = utils::HashMap<CacheKey, std::shared_ptr<BoundComponent>>;
 
 template<typename... Args>
@@ -82,7 +81,7 @@ public:
         const std::shared_ptr<AbstractTask> &task,
         const std::unique_ptr<Cache> &cache) const {
         std::shared_ptr<BoundComponentType> component;
-        const auto key = std::make_pair(this, &task);
+        const CacheKey key = std::make_pair(this, task.get());
         if (cache->count(key)) {
             component =
                 std::dynamic_pointer_cast<BoundComponentType>(cache->at(key));
