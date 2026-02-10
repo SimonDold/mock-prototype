@@ -28,14 +28,16 @@ struct BoundArgs {
         std::declval<Tuple>()));
 };
 
-template<typename BoundComponent, typename ComponentArgs>
-struct BoundComponentMatchesComponentArgs {
-    static constexpr bool value = IsConstructibleFromArgsTuple<
-        BoundComponent,
-        typename PrependedTuple<
-            std::shared_ptr<AbstractTask>,
-            typename BoundArgs<ComponentArgs>::type>::type>::value;
-};
+template<typename ComponentArgs, typename BoundComponent>
+concept ComponentArgsFor = IsConstructibleFromArgsTuple<
+    BoundComponent, typename PrependedTuple<
+                        std::shared_ptr<AbstractTask>,
+                        typename BoundArgs<ComponentArgs>::type>::type>::value;
+
+template<typename BoundComponentType, typename T>
+concept ComponentCategoryOf =
+    std::derived_from<BoundComponentType, BoundComponent> &&
+    std::derived_from<T, BoundComponentType>;
 
 template<typename T, typename Args>
 static std::shared_ptr<T> make_shared_from_tuple(

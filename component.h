@@ -60,13 +60,11 @@ public:
 };
 
 template<
-    typename BoundComponent, typename BoundComponentType,
-    typename ComponentArgs>
-    requires std::derived_from<BoundComponent, BoundComponentType> &&
-             BoundComponentMatchesComponentArgs<
-                 BoundComponent, ComponentArgs>::value
+    typename BoundComponent,
+    ComponentCategoryOf<BoundComponent> BoundComponentType,
+    ComponentArgsFor<BoundComponent> Args>
 class Component : public TypedComponent<BoundComponentType> {
-    ComponentArgs args;
+    Args args;
 protected:
     virtual std::shared_ptr<BoundComponentType> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
@@ -76,12 +74,12 @@ protected:
     }
 
 public:
-    explicit Component(ComponentArgs &&_args)
+    explicit Component(Args &&_args)
         : TypedComponent<BoundComponentType>(
               // get description (always second to last argument)
-              std::get<std::tuple_size_v<ComponentArgs> - 2>(_args),
+              std::get<std::tuple_size_v<Args> - 2>(_args),
               // get verbosity (always last argument)
-              std::get<std::tuple_size_v<ComponentArgs> - 1>(_args)),
+              std::get<std::tuple_size_v<Args> - 1>(_args)),
           args(move(_args)){};
 };
 
