@@ -1,8 +1,8 @@
 #ifndef OPEN_LIST_H
 #define OPEN_LIST_H
 
-#include "state_id.h"
 #include "operator_id.h"
+#include "state_id.h"
 
 #include <set>
 
@@ -17,7 +17,7 @@ class OpenList {
 public:
     explicit OpenList(bool preferred_only = false);
     virtual ~OpenList() = default;
-    
+
     virtual void dump() = 0;
 };
 
@@ -31,7 +31,5 @@ template<class Entry>
 OpenList<Entry>::OpenList(bool only_preferred)
     : only_preferred(only_preferred) {
 }
-
-
 
 #endif
