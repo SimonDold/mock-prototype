@@ -2,18 +2,17 @@
 #define EVALUATORS_CONST_EVALUATOR_H
 #include "../evaluator.h"
 
+namespace const_evaluator {
 class ConstEvaluator : public Evaluator {
     int c;
 public:
     ConstEvaluator(
-        const std::shared_ptr<AbstractTask> &, int c, std::string,
-        utils::Verbosity)
-        : c(c) {
-        std::cout << "ConstEvalConstructor" << std::endl;
-    }
+        const std::shared_ptr<AbstractTask> &, int c,
+        const std::string &description, utils::Verbosity);
 
     void dump() override {
         std::cout << c << std::endl;
     }
 };
+}
 #endif
