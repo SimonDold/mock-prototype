@@ -154,9 +154,9 @@ class Component : public TypedComponent<BoundComponentType> {
 public:
     explicit Component(ComponentArgs &&_args)
         : TypedComponent<BoundComponentType>(
-              std::get<std::tuple_size<decltype(args)>::value - 2>(
+              std::get<std::tuple_size_v<ComponentArgs> - 2>(
                   _args), // get description (always second to last argument)
-              std::get<std::tuple_size<decltype(args)>::value - 1>(
+              std::get<std::tuple_size_v<ComponentArgs> - 1>(
                   _args) // get verbosity (always last argument)
               ),
           args(move(_args)){};
@@ -165,8 +165,8 @@ public:
 
 template<typename T>
 static auto recursively_bind_components(
-    [[maybe_unused]] const std::shared_ptr<AbstractTask> &task,
-    [[maybe_unused]] const std::unique_ptr<Cache> &cache,
+    const std::shared_ptr<AbstractTask> &,
+    const std::unique_ptr<Cache> &,
     const T &t) {
     return t;
 }
