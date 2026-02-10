@@ -42,7 +42,7 @@ int main() {
      */
     std::shared_ptr<TypedComponent<OpenListFactory>> ti_tb_olist = 
         make_shared_component<TieBreakingOpenListFactory, OpenListFactory>(
-            std::tuple(evals, "tie", utils::Verbosity::NORMAL));
+            std::tuple(evals, false, false, "tie", utils::Verbosity::NORMAL));
     auto ti_eager =
         make_shared_component<eager_search::EagerSearch, SearchAlgorithm>(
             std::tuple(
