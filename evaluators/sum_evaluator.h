@@ -8,11 +8,8 @@ class SumEvaluator : public Evaluator {
 public:
     SumEvaluator(
         const std::shared_ptr<AbstractTask> &,
-        const std::vector<std::shared_ptr<Evaluator>> &evals, std::string,
-        utils::Verbosity)
-        : evals(evals) {
-        std::cout << "SumEvalConstructor" << std::endl;
-    }
+        const std::vector<std::shared_ptr<Evaluator>> &evals,
+        const std::string &description, utils::Verbosity verboisity);
 
     void dump() override {
         for (auto eval : evals) {
