@@ -159,6 +159,12 @@ static auto recursively_bind_components(
 }
 
 template<typename T>
+concept Bindable =
+    requires(T t, const std::shared_ptr<AbstractTask> &task, Cache &cache) {
+        { t.bind_with_cache(task, cache) };
+    };
+
+template<Bindable T>
 static auto recursively_bind_components(
     const std::shared_ptr<AbstractTask> &task, Cache &cache,
     const std::shared_ptr<T> &component) {
