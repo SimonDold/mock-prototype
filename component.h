@@ -135,10 +135,11 @@ template<typename T>
 static auto recursively_bind_components(
     const std::shared_ptr<AbstractTask> &task, Cache &cache,
     const std::vector<T> &vec) {
-    std::vector<decltype(recursively_bind_components(task, cache, vec[0]))>
-        result;
+    using BoundElementType = decltype(recursively_bind_components(
+        std::declval<const std::shared_ptr<AbstractTask> &>(),
+            std::declval<Cache &>(), std::declval<T>()));
+    std::vector<BoundElementType> result;
     result.reserve(vec.size());
-
     for (const auto &elem : vec) {
         result.push_back(recursively_bind_components(task, cache, elem));
     }
