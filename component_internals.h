@@ -16,11 +16,6 @@ class ComponentBase;
 using CacheKey = const std::pair<const ComponentBase *, const AbstractTask *>;
 using Cache = utils::HashMap<CacheKey, std::shared_ptr<BoundComponent>>;
 
-template<typename... Args>
-static auto recursively_bind_components(
-    const std::shared_ptr<AbstractTask> &task, Cache &cache,
-    const std::tuple<Args...> &args);
-
 template<typename Tuple>
 struct BoundArgs {
     using type = decltype(recursively_bind_components(
@@ -48,6 +43,12 @@ static std::shared_ptr<T> make_shared_from_tuple(
         },
         args);
 }
+
+template<typename T>
+concept Bindable =
+    requires(T t, const std::shared_ptr<AbstractTask> &task, Cache &cache) {
+        { t.bind_with_cache(task, cache) };
+    };
 
 template<typename T>
 static auto recursively_bind_components(
@@ -81,12 +82,6 @@ static auto recursively_bind_components(
         },
         args);
 }
-
-template<typename T>
-concept Bindable =
-    requires(T t, const std::shared_ptr<AbstractTask> &task, Cache &cache) {
-        { t.bind_with_cache(task, cache) };
-    };
 
 template<Bindable T>
 static auto recursively_bind_components(
