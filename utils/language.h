@@ -17,8 +17,7 @@ struct IsConstructibleFromArgsTuple;
 
 template<typename T, typename... Ts>
 struct IsConstructibleFromArgsTuple<T, std::tuple<Ts...>> {
-    static constexpr bool value =
-        std::constructible_from<T, Ts...>;
+    static constexpr bool value = std::constructible_from<T, Ts...>;
 };
 
 #endif

@@ -1,7 +1,5 @@
-
-//
-//
-//
+#ifndef HASH_H
+#define HASH_H
 
 #include <cassert>
 #include <cstddef>
@@ -311,5 +309,4 @@ template<typename T>
 using HashSet = std::unordered_set<T, Hash<T>>;
 }
 
-//
-//
+#endif
