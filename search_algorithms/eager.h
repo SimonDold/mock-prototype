@@ -25,8 +25,11 @@ public:
         const std::string &description, utils::Verbosity verbosity);
 
     void dump() override {
-        std::cout << "eager" << " with:\n f-eval:" << std::endl;
+        std::cout << "eager"
+                  << " with f-eval and open_list:\n f-eval:" << std::endl;
         f_evaluator->dump();
+        std::cout << " open_list:" << std::endl;
+        open_list->dump();
     }
 };
 }

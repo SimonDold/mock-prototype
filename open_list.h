@@ -26,6 +26,7 @@ public:
         std::set<Evaluator *> &evals) = 0;
     bool only_contains_preferred_entries() const;
 
+    virtual void dump() = 0;
 };
 
 using StateOpenListEntry = StateID;

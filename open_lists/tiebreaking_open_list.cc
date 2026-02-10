@@ -38,6 +38,14 @@ public:
     virtual void clear() override;
     virtual void get_path_dependent_evaluators(
         set<Evaluator *> &evals) override;
+    void dump() override {
+        std::cout << "TBOpenList(NOT factory) with evals:\n" << std::endl;
+        for (auto eval : evaluators) {
+            std::cout << "TBOL_eval: ";
+            eval->dump();
+            std::cout << std::endl;
+        }
+    }
 };
 
 template<class Entry>
