@@ -1,9 +1,11 @@
 
 #include "component.h"
+#include "open_list_factory.h"
 
 #include "evaluators/const_evaluator.h"
 #include "evaluators/sum_evaluator.h"
 #include "evaluators/weighted_evaluator.h"
+#include "open_lists/tiebreaking_open_list.h"
 #include "search_algorithms/eager.h"
 
 #include <concepts>
@@ -13,7 +15,7 @@
 #include <vector>
 
 int main() {
-    auto ti_c_eval = make_shared_component<ConstEvaluator, Evaluator>(
+    auto ti_c_eval = make_shared_component<const_evaluator::ConstEvaluator, Evaluator>(
         std::tuple(2, "c_eval", utils::Verbosity::NORMAL));
     auto ti_w_eval = make_shared_component<WeightedEvaluator, Evaluator>(
         std::tuple(42, ti_c_eval, "w_eval", utils::Verbosity::NORMAL));
@@ -38,9 +40,13 @@ int main() {
      * not possible:
      * auto ti_dummy = make_shared_Component<Dummy>(666);
      */
+    std::shared_ptr<TypedComponent<OpenListFactory>> ti_tb_olist = 
+        make_shared_component<TieBreakingOpenListFactory, OpenListFactory>(
+            std::tuple(evals, "tie", utils::Verbosity::NORMAL));
     auto ti_eager =
         make_shared_component<eager_search::EagerSearch, SearchAlgorithm>(
             std::tuple(
+                ti_tb_olist,
                 ti_sum_eval, dummy_ptr, "eager" /*1*/,
                 utils::Verbosity::NORMAL));
     auto eager =
