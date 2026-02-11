@@ -67,18 +67,18 @@ protected:
     virtual std::shared_ptr<Category> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         Cache &cache) const override {
-        auto ts_args = recursively_bind_components(task, cache, args);
-        return make_shared_from_tuple<T>(task, ts_args);
+        auto bound_args = recursively_bind_components(task, cache, args);
+        return make_shared_from_tuple<T>(task, bound_args);
     }
 
 public:
-    explicit Component(Args &&_args)
+    explicit Component(Args &&args)
         : TypedComponent<Category>(
               // get description (always second to last argument)
-              std::get<std::tuple_size_v<Args> - 2>(_args),
+              std::get<std::tuple_size_v<Args> - 2>(args),
               // get verbosity (always last argument)
-              std::get<std::tuple_size_v<Args> - 1>(_args)),
-          args(move(_args)){};
+              std::get<std::tuple_size_v<Args> - 1>(args)),
+          args(move(args)){};
 };
 
 template<typename T, typename Category, typename Args>

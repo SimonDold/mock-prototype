@@ -1,4 +1,3 @@
-
 #include "component.h"
 #include "open_list_factory.h"
 
@@ -8,41 +7,44 @@
 #include "open_lists/tiebreaking_open_list.h"
 #include "search_algorithms/eager.h"
 
-#include <concepts>
 #include <iostream>
 #include <memory>
-#include <string>
 #include <vector>
 
+using namespace std;
+
 int main() {
-    auto ti_c_eval =
+    using EvaluatorComponent = shared_ptr<TypedComponent<Evaluator>>;
+    using OpenListComponent = shared_ptr<TypedComponent<OpenListFactory>>;
+    using SearchComponent = shared_ptr<TypedComponent<SearchAlgorithm>>;
+
+    EvaluatorComponent c_eval =
         make_shared_component<const_evaluator::ConstEvaluator, Evaluator>(
-            std::tuple(2, "c_eval", utils::Verbosity::NORMAL));
-    auto ti_w_eval = make_shared_component<WeightedEvaluator, Evaluator>(
-        std::tuple(42, ti_c_eval, "w_eval", utils::Verbosity::NORMAL));
-    auto evals = std::vector<std::shared_ptr<TypedComponent<Evaluator>>>{
-        ti_c_eval, ti_w_eval, ti_c_eval};
-    std::shared_ptr<TypedComponent<Evaluator>> ti_sum_eval =
+            tuple(2, "c_eval", utils::Verbosity::NORMAL));
+    EvaluatorComponent w_eval =
+        make_shared_component<WeightedEvaluator, Evaluator>(
+            tuple(42, c_eval, "w_eval", utils::Verbosity::NORMAL));
+    vector<EvaluatorComponent> evals{c_eval, w_eval, c_eval};
+    EvaluatorComponent sum_eval =
         make_shared_component<SumEvaluator, Evaluator>(
-            std::tuple(evals, "sum_eval", utils::Verbosity::NORMAL));
-    // auto w_eval = ti_w_eval->create_bound_component(AbstractTask{});
-    auto w_eval = ti_w_eval->bind(std::shared_ptr<AbstractTask>{});
-    w_eval->dump();
-    std::cout << "- - - - -- " << std::endl;
-    auto sum_eval = ti_sum_eval->bind(std::shared_ptr<AbstractTask>{});
-    sum_eval->dump();
+            tuple(evals, "sum_eval", utils::Verbosity::NORMAL));
 
-    std::cout << "- - - " << std::endl;
+    shared_ptr<AbstractTask> task;
+    shared_ptr<Evaluator> bound_w_eval = w_eval->bind(task);
+    bound_w_eval->dump();
+    cout << "- - - - -- " << endl;
+    shared_ptr<Evaluator> bound_sum_eval = sum_eval->bind(task);
+    bound_sum_eval->dump();
 
-    std::shared_ptr<TypedComponent<OpenListFactory>> ti_tb_olist =
+    cout << "- - - " << endl;
+
+    OpenListComponent tb_olist =
         make_shared_component<TieBreakingOpenListFactory, OpenListFactory>(
-            std::tuple(evals, false, false, "tie", utils::Verbosity::NORMAL));
-    auto ti_eager =
+            tuple(evals, false, false, "tie", utils::Verbosity::NORMAL));
+    SearchComponent eager =
         make_shared_component<eager_search::EagerSearch, SearchAlgorithm>(
-            std::tuple(
-                ti_tb_olist, ti_sum_eval, "eager" /*1*/,
-                utils::Verbosity::NORMAL));
-    auto eager = ti_eager->bind(std::shared_ptr<AbstractTask>{});
-    eager->dump();
-    std::cout << "done" << std::endl;
+            tuple(tb_olist, sum_eval, "eager" /*1*/, utils::Verbosity::NORMAL));
+    shared_ptr<SearchAlgorithm> bound_eager = eager->bind(task);
+    bound_eager->dump();
+    cout << "done" << endl;
 }
