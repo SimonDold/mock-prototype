@@ -8,7 +8,7 @@
 // fd
 //
 //
-class Evaluator : public BoundComponent {
+class Evaluator : public TaskSpecificComponent {
 public:
     virtual void dump() = 0;
 };

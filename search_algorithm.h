@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-class SearchAlgorithm : public BoundComponent {
+class SearchAlgorithm : public TaskSpecificComponent {
 public:
     virtual void dump() = 0;
 };

@@ -14,9 +14,11 @@
 using namespace std;
 
 int main() {
-    using EvaluatorComponent = shared_ptr<TypedComponent<Evaluator>>;
-    using OpenListComponent = shared_ptr<TypedComponent<OpenListFactory>>;
-    using SearchComponent = shared_ptr<TypedComponent<SearchAlgorithm>>;
+    using EvaluatorComponent = shared_ptr<TaskIndependentComponent<Evaluator>>;
+    using OpenListComponent =
+        shared_ptr<TaskIndependentComponent<OpenListFactory>>;
+    using SearchComponent =
+        shared_ptr<TaskIndependentComponent<SearchAlgorithm>>;
 
     EvaluatorComponent c_eval =
         make_shared_component<const_evaluator::ConstEvaluator, Evaluator>(
@@ -30,10 +32,10 @@ int main() {
             tuple(evals, "sum_eval", utils::Verbosity::NORMAL));
 
     shared_ptr<AbstractTask> task;
-    shared_ptr<Evaluator> bound_w_eval = w_eval->bind(task);
+    shared_ptr<Evaluator> bound_w_eval = w_eval->bind_task(task);
     bound_w_eval->dump();
     cout << "- - - - -- " << endl;
-    shared_ptr<Evaluator> bound_sum_eval = sum_eval->bind(task);
+    shared_ptr<Evaluator> bound_sum_eval = sum_eval->bind_task(task);
     bound_sum_eval->dump();
 
     cout << "- - - " << endl;
@@ -44,7 +46,7 @@ int main() {
     SearchComponent eager =
         make_shared_component<eager_search::EagerSearch, SearchAlgorithm>(
             tuple(tb_olist, sum_eval, "eager" /*1*/, utils::Verbosity::NORMAL));
-    shared_ptr<SearchAlgorithm> bound_eager = eager->bind(task);
+    shared_ptr<SearchAlgorithm> bound_eager = eager->bind_task(task);
     bound_eager->dump();
     cout << "done" << endl;
 }

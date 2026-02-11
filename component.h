@@ -11,79 +11,67 @@ class AbstractTask;
 
 // common base class for all bound components (OpenLists, Evaluators, etc)
 // they are *bound* to a task.
-class BoundComponent {
+class TaskSpecificComponent {
 public:
-    virtual ~BoundComponent() = default;
+    virtual ~TaskSpecificComponent() = default;
 };
 
 // common base class for templated classes about TypedComponent and Components
-class ComponentBase {
+class TaskIndependentComponentBase {
 public:
-    virtual ~ComponentBase() = default;
+    virtual ~TaskIndependentComponentBase() = default;
 };
 
-template<typename Category>
-class TypedComponent : public ComponentBase {
-protected:
-    const std::string description;
-    const utils::Verbosity verbosity;
-    // // mutable utils::LogProxy log;
-
-    virtual std::shared_ptr<Category> create_bound_component(
+template<typename ComponentType>
+class TaskIndependentComponent : public TaskIndependentComponentBase {
+    virtual std::shared_ptr<ComponentType> create_task_specific_component(
         const std::shared_ptr<AbstractTask> &task, Cache &cache) const = 0;
 
 public:
-    TypedComponent(const std::string &description, utils::Verbosity verbosity)
-        : description(description), verbosity(verbosity) {
-    }
-
-    std::shared_ptr<Category> bind_with_cache(
+    std::shared_ptr<ComponentType> bind_task(
         const std::shared_ptr<AbstractTask> &task, Cache &cache) const {
-        std::shared_ptr<Category> component;
+        std::shared_ptr<ComponentType> component;
         const CacheKey key = std::make_pair(this, task.get());
         if (cache.count(key)) {
-            std::shared_ptr<BoundComponent> entry = cache.at(key);
-            component = std::dynamic_pointer_cast<Category>(entry);
+            std::shared_ptr<TaskSpecificComponent> entry = cache.at(key);
+            component = std::dynamic_pointer_cast<ComponentType>(entry);
             assert(component);
         } else {
-            component = create_bound_component(task, cache);
+            component = create_task_specific_component(task, cache);
             cache.emplace(key, component);
         }
         return component;
     }
 
-    std::shared_ptr<Category> bind(
+    std::shared_ptr<ComponentType> bind_task(
         const std::shared_ptr<AbstractTask> &task) const {
         Cache cache;
-        return bind_with_cache(task, cache);
+        return bind_task(task, cache);
     }
 };
 
-template<typename T, ComponentCategoryOf<T> Category, ComponentArgsFor<T> Args>
-class Component : public TypedComponent<Category> {
+template<typename T, ComponentTypeOf<T> ComponentType, ComponentArgsFor<T> Args>
+class AutoTaskIndependentComponent
+    : public TaskIndependentComponent<ComponentType> {
     Args args;
 
-protected:
-    virtual std::shared_ptr<Category> create_bound_component(
+    virtual std::shared_ptr<ComponentType> create_task_specific_component(
         const std::shared_ptr<AbstractTask> &task,
         Cache &cache) const override {
-        auto bound_args = bind_components_recursively(args, task, cache);
+        auto bound_args = bind_task_recursively(args, task, cache);
         return make_shared_from_tuple<T>(task, bound_args);
     }
 
 public:
-    explicit Component(Args &&args)
-        : TypedComponent<Category>(
-              // get description (always second to last argument)
-              std::get<std::tuple_size_v<Args> - 2>(args),
-              // get verbosity (always last argument)
-              std::get<std::tuple_size_v<Args> - 1>(args)),
-          args(move(args)){};
+    explicit AutoTaskIndependentComponent(Args &&args) : args(move(args)) {
+    }
 };
 
-template<typename T, typename Category, typename Args>
-std::shared_ptr<TypedComponent<Category>> make_shared_component(Args &&args) {
-    return make_shared<Component<T, Category, Args>>(move(args));
+template<typename T, typename ComponentType, typename Args>
+std::shared_ptr<TaskIndependentComponent<ComponentType>>
+make_shared_component(Args &&args) {
+    return make_shared<AutoTaskIndependentComponent<T, ComponentType, Args>>(
+        move(args));
 }
 
 #endif

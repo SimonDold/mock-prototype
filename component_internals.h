@@ -10,15 +10,16 @@
 #include <vector>
 
 class AbstractTask;
-class BoundComponent;
-class ComponentBase;
+class TaskSpecificComponent;
+class TaskIndependentComponentBase;
 
-using CacheKey = std::pair<const ComponentBase *, const AbstractTask *>;
-using Cache = utils::HashMap<CacheKey, std::shared_ptr<BoundComponent>>;
+using CacheKey =
+    std::pair<const TaskIndependentComponentBase *, const AbstractTask *>;
+using Cache = utils::HashMap<CacheKey, std::shared_ptr<TaskSpecificComponent>>;
 
 template<typename Tuple>
 struct BoundArgs {
-    using type = decltype(bind_components_recursively(
+    using type = decltype(bind_task_recursively(
         std::declval<Tuple>(), std::declval<std::shared_ptr<AbstractTask>>(),
         std::declval<Cache &>()));
 };
@@ -29,9 +30,10 @@ concept ComponentArgsFor = IsConstructibleFromArgsTuple<
            std::shared_ptr<AbstractTask>,
            typename BoundArgs<Args>::type>::type>::value;
 
-template<typename Category, typename T>
-concept ComponentCategoryOf = std::derived_from<Category, BoundComponent> &&
-                              std::derived_from<T, Category>;
+template<typename ComponentType, typename T>
+concept ComponentTypeOf =
+    std::derived_from<ComponentType, TaskSpecificComponent> &&
+    std::derived_from<T, ComponentType>;
 
 template<typename T, typename Args>
 std::shared_ptr<T> make_shared_from_tuple(
@@ -48,47 +50,47 @@ template<typename T>
 concept Bindable =
     requires(T t, const std::shared_ptr<AbstractTask> &task, Cache &cache) {
         {
-            t.bind_with_cache(task, cache)
-        } -> std::convertible_to<std::shared_ptr<BoundComponent>>;
+            t.bind_task(task, cache)
+        } -> std::convertible_to<std::shared_ptr<TaskSpecificComponent>>;
     };
 
 template<Bindable T>
-auto bind_components_recursively(
+auto bind_task_recursively(
     const std::shared_ptr<T> &component,
     const std::shared_ptr<AbstractTask> &task, Cache &cache) {
-    return component->bind_with_cache(task, cache);
+    return component->bind_task(task, cache);
 }
 
 template<typename T>
-auto bind_components_recursively(
+auto bind_task_recursively(
     const std::vector<T> &vec, const std::shared_ptr<AbstractTask> &task,
     Cache &cache) {
-    using BoundElementType = decltype(bind_components_recursively(
+    using BoundElementType = decltype(bind_task_recursively(
         std::declval<T>(),
         std::declval<const std::shared_ptr<AbstractTask> &>(),
         std::declval<Cache &>()));
     std::vector<BoundElementType> result;
     result.reserve(vec.size());
     for (const auto &elem : vec) {
-        result.push_back(bind_components_recursively(elem, task, cache));
+        result.push_back(bind_task_recursively(elem, task, cache));
     }
     return result;
 }
 
 template<typename... Args>
-auto bind_components_recursively(
+auto bind_task_recursively(
     const std::tuple<Args...> &args, const std::shared_ptr<AbstractTask> &task,
     Cache &cache) {
     return std::apply(
         [&](const Args &...elems) {
             return std::make_tuple(
-                bind_components_recursively(elems, task, cache)...);
+                bind_task_recursively(elems, task, cache)...);
         },
         args);
 }
 
 template<typename T>
-auto bind_components_recursively(
+auto bind_task_recursively(
     const T &t, const std::shared_ptr<AbstractTask> &, Cache &) {
     return t;
 }

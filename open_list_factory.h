@@ -6,7 +6,7 @@
 
 #include <memory>
 
-class OpenListFactory : public BoundComponent {
+class OpenListFactory : public TaskSpecificComponent {
 public:
     OpenListFactory() = default;
     virtual ~OpenListFactory() = default;
