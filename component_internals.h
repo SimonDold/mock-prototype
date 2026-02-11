@@ -1,9 +1,9 @@
 #ifndef COMPONENT_INTERNALS_H
 #define COMPONENT_INTERNALS_H
 
-#include "hash.h"
-
+#include "utils/hash.h"
 #include "utils/language.h"
+#include "utils/tuples.h"
 
 #include <concepts>
 #include <memory>
@@ -25,26 +25,15 @@ struct BoundArgs {
 };
 
 template<typename Args, typename T>
-concept ComponentArgsFor = IsConstructibleFromArgsTuple<
-    T, typename PrependedTuple<
-           std::shared_ptr<AbstractTask>,
-           typename BoundArgs<Args>::type>::type>::value;
+concept ComponentArgsFor = utils::ConstructibleFromArgsTuple<
+    T,
+    typename utils::PrependedTuple<
+        std::shared_ptr<AbstractTask>, typename BoundArgs<Args>::type>::type>;
 
 template<typename ComponentType, typename T>
 concept ComponentTypeOf =
     std::derived_from<ComponentType, TaskSpecificComponent> &&
     std::derived_from<T, ComponentType>;
-
-template<typename T, typename Args>
-std::shared_ptr<T> make_shared_from_tuple(
-    const std::shared_ptr<AbstractTask> &task, const Args &args) {
-    return std::apply(
-        [&](auto &&...unpackedArgs) {
-            return make_shared<T>(
-                task, std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
-        },
-        args);
-}
 
 template<typename T>
 concept Bindable =
@@ -94,5 +83,4 @@ auto bind_task_recursively(
     const T &t, const std::shared_ptr<AbstractTask> &, Cache &) {
     return t;
 }
-
 #endif

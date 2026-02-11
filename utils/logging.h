@@ -1,6 +1,7 @@
+#ifndef UTILS_LOGGING_H
+#define UTILS_LOGGING_H
 
 namespace utils {
-// See add_log_options_to_feature for documentation.
 enum class Verbosity {
     SILENT,
     NORMAL,
@@ -8,3 +9,5 @@ enum class Verbosity {
     DEBUG
 };
 }
+
+#endif

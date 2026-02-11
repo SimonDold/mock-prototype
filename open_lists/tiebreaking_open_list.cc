@@ -42,7 +42,7 @@ TieBreakingOpenListFactory::TieBreakingOpenListFactory(
     const std::shared_ptr<AbstractTask> &task,
     const std::vector<std::shared_ptr<Evaluator>> &evals, bool unsafe_pruning,
     bool pref_only, const std::string &description, utils::Verbosity verbosity)
-    : evals(evals), unsafe_pruning(unsafe_pruning), pref_only(pref_only) {
+    : OpenListFactory(task), evals(evals), unsafe_pruning(unsafe_pruning), pref_only(pref_only) {
     std::cout << "TieBreakingOpenListFactory_Constructor" << std::endl;
 }
 

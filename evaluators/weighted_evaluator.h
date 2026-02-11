@@ -8,9 +8,9 @@ class WeightedEvaluator : public Evaluator {
     std::shared_ptr<Evaluator> eval;
 public:
     WeightedEvaluator(
-        const std::shared_ptr<AbstractTask> &, int w,
+        const std::shared_ptr<AbstractTask> &task, int w,
         const std::shared_ptr<Evaluator> &eval, std::string, utils::Verbosity)
-        : w(w), eval(eval) {
+        : Evaluator(task), w(w), eval(eval) {
         std::cout << "WeightedEvalConstructor" << std::endl;
     }
     void dump() override {

@@ -3,12 +3,16 @@
 
 #include "component.h"
 #include "open_list.h"
+#include "utils/logging.h"
 
 #include <memory>
 
 class OpenListFactory : public TaskSpecificComponent {
 public:
-    OpenListFactory() = default;
+    OpenListFactory(const std::shared_ptr<AbstractTask> &task)
+    : TaskSpecificComponent(task) {
+    }
+
     virtual ~OpenListFactory() = default;
 
     OpenListFactory(const OpenListFactory &) = delete;

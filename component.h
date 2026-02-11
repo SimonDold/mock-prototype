@@ -2,26 +2,48 @@
 #define COMPONENT_H
 
 #include "component_internals.h"
-#include "utils.h"
+#include "task_proxy.h"
+
+#include "plugins/plugin.h"
 
 #include <memory>
-#include <string>
 
 class AbstractTask;
 
-// common base class for all bound components (OpenLists, Evaluators, etc)
-// they are *bound* to a task.
+/*
+  Base class for all classes that represent components bound to a specific
+  task, like Evaluator, SearchAlgorithm, and OpenList.
+*/
 class TaskSpecificComponent {
+protected:
+    /*
+      Hold a reference to the task implementation and pass it to objects that
+      need it.
+    */
+    const std::shared_ptr<AbstractTask> task;
+    /*
+      Use task_proxy to access task information.
+    */
+    TaskProxy task_proxy;
 public:
+    TaskSpecificComponent(const std::shared_ptr<AbstractTask> &task)
+        : task(task), task_proxy(*task) {
+    }
     virtual ~TaskSpecificComponent() = default;
 };
 
-// common base class for templated classes about TypedComponent and Components
+/*
+  Base class for all task-independent components. We need this non-templated
+  base class to mix components of different types in the same container.
+*/
 class TaskIndependentComponentBase {
 public:
     virtual ~TaskIndependentComponentBase() = default;
 };
 
+/*
+  Base class of all components of a specific type (e.g. Evaluator).
+*/
 template<typename ComponentType>
 class TaskIndependentComponent : public TaskIndependentComponentBase {
     virtual std::shared_ptr<ComponentType> create_task_specific_component(
@@ -50,6 +72,13 @@ public:
     }
 };
 
+/*
+  Templated implementation of a concrete component. This class stores arguments
+  to construct a task-specific component (e.g. HMHeuristic, EagerSearch) in
+  their component form (not bound to a task yet). When binding a task to this
+  component, it recursively binds all these arguments to the task and
+  instantiates the task-specific component.
+*/
 template<typename T, ComponentTypeOf<T> ComponentType, ComponentArgsFor<T> Args>
 class AutoTaskIndependentComponent
     : public TaskIndependentComponent<ComponentType> {
@@ -59,7 +88,7 @@ class AutoTaskIndependentComponent
         const std::shared_ptr<AbstractTask> &task,
         Cache &cache) const override {
         auto bound_args = bind_task_recursively(args, task, cache);
-        return make_shared_from_tuple<T>(task, bound_args);
+        return plugins::make_shared_from_arg_tuples<T>(task, bound_args);
     }
 
 public:

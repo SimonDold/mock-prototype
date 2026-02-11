@@ -4,13 +4,7 @@
 #include <concepts>
 #include <tuple>
 
-template<typename T, typename Tuple>
-struct PrependedTuple;
-
-template<typename T, typename... Ts>
-struct PrependedTuple<T, std::tuple<Ts...>> {
-    using type = std::tuple<T, Ts...>;
-};
+namespace utils {
 
 template<typename T, typename Tuple>
 struct IsConstructibleFromArgsTuple;
@@ -20,4 +14,9 @@ struct IsConstructibleFromArgsTuple<T, std::tuple<Ts...>> {
     static constexpr bool value = std::constructible_from<T, Ts...>;
 };
 
+template<typename T, typename Args>
+concept ConstructibleFromArgsTuple = IsConstructibleFromArgsTuple<
+    T, Args>::value;
+}
 #endif
+
