@@ -67,7 +67,7 @@ protected:
     virtual std::shared_ptr<Category> create_bound_component(
         const std::shared_ptr<AbstractTask> &task,
         Cache &cache) const override {
-        auto bound_args = recursively_bind_components(task, cache, args);
+        auto bound_args = bind_components_recursively(args, task, cache);
         return make_shared_from_tuple<T>(task, bound_args);
     }
 
